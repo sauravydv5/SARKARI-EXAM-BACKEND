@@ -6,7 +6,7 @@ const {
   getLatestJobBySlug,
   updateLatestJob,
   deleteLatestJob,
-} = require("../controllers/latestJobcontroller");
+} = require("../controllers/latestJobController");
 
 const router = express.Router();
 
