@@ -4,7 +4,12 @@ import mongoose from 'mongoose';
 import Post, { POST_CATEGORIES } from '../models/Post.js';
 import { protect, adminOnly } from '../middleware/auth.js';
 import { slugify, uniqueSlug } from '../utils/slugify.js';
-import { sanitizePostPayload, sanitizeText } from '../utils/sanitize.js';
+import {
+  sanitizePostPayload,
+  sanitizeText,
+  sanitizeContent,
+  sanitizeUrl,
+} from '../utils/sanitize.js';
 
 const router = express.Router();
 
@@ -220,13 +225,51 @@ router.put(
     try {
       if (!validate(req, res)) return;
 
-      const payload = sanitizePostPayload(req.body);
-      // Don't force isActive true on update if admin omitted — preserve via only set defined
-      const updates = { ...payload };
-      if (req.body.isActive === undefined) delete updates.isActive;
-      if (req.body.isFeatured === undefined) delete updates.isFeatured;
+      const updates = {};
+      if (req.body.title !== undefined) updates.title = sanitizeText(req.body.title, 300);
+      if (req.body.category !== undefined) updates.category = req.body.category;
+      if (req.body.shortDescription !== undefined) updates.shortDescription = sanitizeText(req.body.shortDescription, 1000);
+      if (req.body.content !== undefined) updates.content = sanitizeContent(req.body.content);
+      if (req.body.organization !== undefined) updates.organization = sanitizeText(req.body.organization, 200);
+      if (req.body.department !== undefined) updates.department = sanitizeText(req.body.department, 200);
+      if (req.body.postName !== undefined) updates.postName = sanitizeText(req.body.postName, 300);
+      if (req.body.totalVacancies !== undefined) updates.totalVacancies = Math.max(0, parseInt(req.body.totalVacancies, 10) || 0);
+      if (req.body.vacancyDetails !== undefined) updates.vacancyDetails = sanitizeText(req.body.vacancyDetails, 2000);
+      if (req.body.qualification !== undefined) updates.qualification = sanitizeText(req.body.qualification, 500);
+      if (req.body.ageLimit !== undefined) updates.ageLimit = sanitizeText(req.body.ageLimit, 300);
+      if (req.body.applicationFee !== undefined) updates.applicationFee = sanitizeText(req.body.applicationFee, 500);
+      if (req.body.salary !== undefined) updates.salary = sanitizeText(req.body.salary, 500);
+      if (req.body.selectionProcess !== undefined) updates.selectionProcess = sanitizeText(req.body.selectionProcess, 1000);
+      if (req.body.documentsRequired !== undefined) updates.documentsRequired = sanitizeText(req.body.documentsRequired, 2000);
+      if (req.body.howToApply !== undefined) updates.howToApply = sanitizeText(req.body.howToApply, 3000);
+      if (req.body.importantDates !== undefined) {
+        const dates = req.body.importantDates;
+        updates.importantDates = {};
+        if (dates.notificationDate !== undefined) updates.importantDates.notificationDate = sanitizeText(dates.notificationDate, 100);
+        if (dates.startDate !== undefined) updates.importantDates.startDate = sanitizeText(dates.startDate, 100);
+        if (dates.lastDate !== undefined) updates.importantDates.lastDate = sanitizeText(dates.lastDate, 100);
+        if (dates.examDate !== undefined) updates.importantDates.examDate = sanitizeText(dates.examDate, 100);
+        if (dates.resultDate !== undefined) updates.importantDates.resultDate = sanitizeText(dates.resultDate, 100);
+        if (dates.admitCardDate !== undefined) updates.importantDates.admitCardDate = sanitizeText(dates.admitCardDate, 100);
+      }
+      if (req.body.links !== undefined) {
+        const links = req.body.links;
+        updates.links = {};
+        if (links.applyOnline !== undefined) updates.links.applyOnline = sanitizeUrl(links.applyOnline);
+        if (links.officialNotification !== undefined) updates.links.officialNotification = sanitizeUrl(links.officialNotification);
+        if (links.officialWebsite !== undefined) updates.links.officialWebsite = sanitizeUrl(links.officialWebsite);
+        if (links.downloadAdmitCard !== undefined) updates.links.downloadAdmitCard = sanitizeUrl(links.downloadAdmitCard);
+        if (links.checkResult !== undefined) updates.links.checkResult = sanitizeUrl(links.checkResult);
+        if (links.answerKey !== undefined) updates.links.answerKey = sanitizeUrl(links.answerKey);
+      }
+      if (req.body.tags !== undefined && Array.isArray(req.body.tags)) {
+        updates.tags = req.body.tags.map((t) => sanitizeText(t, 40)).filter(Boolean).slice(0, 20);
+      }
+      if (req.body.isFeatured !== undefined) updates.isFeatured = Boolean(req.body.isFeatured);
+      if (req.body.isActive !== undefined) updates.isActive = Boolean(req.body.isActive);
+
       // category must remain valid if provided
-      if (req.body.category && !POST_CATEGORIES.includes(req.body.category)) {
+      if (updates.category !== undefined && !POST_CATEGORIES.includes(updates.category)) {
         return res.status(400).json({ success: false, message: 'Invalid category' });
       }
 
