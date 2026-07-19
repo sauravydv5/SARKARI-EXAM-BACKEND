@@ -81,6 +81,13 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
+app.get('/', (_req, res) => {
+  res.json({
+    success: true,
+    message: 'DevTender API Running Successfully 🚀',
+  });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({
     success: true,
