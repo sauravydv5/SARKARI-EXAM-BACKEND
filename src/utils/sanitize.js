@@ -99,6 +99,7 @@ export function sanitizePostPayload(body = {}) {
     },
     links: {
       applyOnline: sanitizeUrl(links.applyOnline),
+      importantLink: sanitizeUrl(links.importantLink),
       officialNotification: sanitizeUrl(links.officialNotification),
       officialWebsite: sanitizeUrl(links.officialWebsite),
       downloadAdmitCard: sanitizeUrl(links.downloadAdmitCard),
@@ -109,6 +110,7 @@ export function sanitizePostPayload(body = {}) {
       ? body.tags.map((t) => sanitizeText(t, 40)).filter(Boolean).slice(0, 20)
       : [],
     isFeatured: Boolean(body.isFeatured),
+    isNew: Boolean(body.isNew),
     isActive: body.isActive === undefined ? true : Boolean(body.isActive),
   };
 }

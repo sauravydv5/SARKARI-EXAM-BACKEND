@@ -40,6 +40,7 @@ const postSchema = new mongoose.Schema(
     },
     links: {
       applyOnline: { type: String, default: '' },
+      importantLink: { type: String, default: '' },
       officialNotification: { type: String, default: '' },
       officialWebsite: { type: String, default: '' },
       downloadAdmitCard: { type: String, default: '' },
@@ -48,6 +49,7 @@ const postSchema = new mongoose.Schema(
     },
     tags: [{ type: String }],
     isFeatured: { type: Boolean, default: false },
+    isNew: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     views: { type: Number, default: 0 },
     publishedAt: { type: Date, default: Date.now },

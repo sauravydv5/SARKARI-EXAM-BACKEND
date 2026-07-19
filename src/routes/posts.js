@@ -256,6 +256,7 @@ router.put(
         const links = req.body.links;
         updates.links = {};
         if (links.applyOnline !== undefined) updates.links.applyOnline = sanitizeUrl(links.applyOnline);
+        if (links.importantLink !== undefined) updates.links.importantLink = sanitizeUrl(links.importantLink);
         if (links.officialNotification !== undefined) updates.links.officialNotification = sanitizeUrl(links.officialNotification);
         if (links.officialWebsite !== undefined) updates.links.officialWebsite = sanitizeUrl(links.officialWebsite);
         if (links.downloadAdmitCard !== undefined) updates.links.downloadAdmitCard = sanitizeUrl(links.downloadAdmitCard);
@@ -266,6 +267,7 @@ router.put(
         updates.tags = req.body.tags.map((t) => sanitizeText(t, 40)).filter(Boolean).slice(0, 20);
       }
       if (req.body.isFeatured !== undefined) updates.isFeatured = Boolean(req.body.isFeatured);
+      if (req.body.isNew !== undefined) updates.isNew = Boolean(req.body.isNew);
       if (req.body.isActive !== undefined) updates.isActive = Boolean(req.body.isActive);
 
       // category must remain valid if provided
@@ -298,15 +300,12 @@ router.delete(
     try {
       if (!validate(req, res)) return;
 
-      const post = await Post.findByIdAndUpdate(
-        req.params.id,
-        { isActive: false },
-        { new: true }
-      );
+      const post = await Post.findByIdAndDelete(req.params.id);
       if (!post) {
         return res.status(404).json({ success: false, message: 'Post not found' });
       }
-      res.json({ success: true, message: 'Post deactivated', data: { _id: post._id, isActive: false } });
+
+      res.json({ success: true, message: 'Post deleted successfully', data: { _id: post._id } });
     } catch (err) {
       next(err);
     }
